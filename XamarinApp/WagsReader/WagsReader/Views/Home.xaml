@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WagsReader.Views.Home"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <ContentPage.Content>
+        <StackLayout>
+            <Label
+                Margin="0,75,0,0"
+                FontSize="48"
+                HeightRequest="100"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                Text="WagsReader"
+                VerticalOptions="Center"
+                WidthRequest="600" />
+            <Label
+                Margin="0,40,0,0"
+                FontSize="18"
+                HeightRequest="60"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                Text="WagsReader is an open-source UWP RSS reader application written in Xamarin and C#"
+                WidthRequest="600" />
+            <Label
+                Margin="0,40,0,0"
+                FontSize="32"
+                HeightRequest="60"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                Text="Get Started"
+                VerticalOptions="Center"
+                WidthRequest="600" />
+            <Label
+                Margin="0,40,0,0"
+                FontSize="18"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                Text="Login with your RSS account to begin."
+                WidthRequest="600" />
+            <Label
+                Margin="0,0,0,0"
+                FontAttributes="Italic"
+                FontSize="18"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                Text="(More to Come)"
+                WidthRequest="600" />
+            <Button
+                Margin="0,40,0,0"
+                Command="{Binding LoginToInoreader}"
+                HeightRequest="48"
+                Style="{StaticResource InoreaderButton}"
+                Text="INOREADER"
+                WidthRequest="200" />
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
