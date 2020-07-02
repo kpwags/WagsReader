@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using WagsReader.Interfaces;
+﻿using WagsReader.Interfaces;
 using WagsReader.iOS;
 
 [assembly: Xamarin.Forms.Dependency(typeof(IOSDeviceInfo))]
@@ -18,9 +17,9 @@ namespace WagsReader.iOS
             return "com.kpwags.wagsreader://oauth2redirect/";
         }
 
-        public bool IsUsingNativeUI()
+        public string GetDeviceID()
         {
-            return true;
+            return UIKit.UIDevice.CurrentDevice.IdentifierForVendor.AsString();
         }
     }
 }

@@ -29,13 +29,9 @@ namespace WagsReader.Services
             // Dictionary with values for the authorize request
             var dic = new Dictionary<string, string>();
             dic.Add("client_id", Constants.InoreaderClientId);
-            dic.Add("client_secret", Constants.InoreaderClientSecret);
-            dic.Add("response_type", "code id_token");
+            dic.Add("response_type", "code");
             dic.Add("scope", Constants.InoreaderScope);
             dic.Add("redirect_uri", Constants.InoreaderRedirectUri);
-            dic.Add("nonce", Guid.NewGuid().ToString("N"));
-            dic.Add("code_challenge", CreateCodeChallenge());
-            dic.Add("code_challenge_method", "S256");
 
             // Add CSRF token to protect against cross-site request forgery attacks.
             var currentCSRFToken = Guid.NewGuid().ToString("N");

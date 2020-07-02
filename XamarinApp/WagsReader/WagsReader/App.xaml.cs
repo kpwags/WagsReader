@@ -1,25 +1,41 @@
 ﻿using System;
+using System.Threading.Tasks;
+using WagsReader.Interfaces;
 using WagsReader.Services;
 using WagsReader.Services.Interfaces;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
+using SQLite;
+using WagsReader.Models;
 
 namespace WagsReader
 {
     public partial class App : Application
     {
-        //public static INavigationService NavigationService { get; } = new NavigationService();
+        private Session _userSession;
+        public Session UserSession
+        {
+            get { return _userSession; }
+            set
+            {
+                if (_userSession == value)
+                    return;
+
+                _userSession = value;
+                OnPropertyChanged(nameof(UserSession));
+            }
+        }
 
         public App()
         {
             InitializeComponent();
 
-            //NavigationService.Configure("Home", typeof(Views.Home));
-            //NavigationService.Configure("InoreaderLogin", typeof(Views.InoreaderLogin));
-
-            //var homePage = ((NavigationService)NavigationService).SetRootPage("Home");
-
             MainPage = new NavigationPage(new Views.Home());
+
+            Task.Run(async () =>
+            {
+                await CreateDatabaseTablesAsync();
+            });
         }
 
         protected override void OnStart()
@@ -32,6 +48,19 @@ namespace WagsReader
 
         protected override void OnResume()
         {
+        }
+
+        private async Task CreateDatabaseTablesAsync()
+        {
+            SQLiteConnection db = DependencyService.Get<IDatabaseConnection>().DBConnection();
+            await Task.Run(() =>
+            {
+                db.RunInTransaction(() =>
+                {
+                    db.CreateTable<User>();
+                    db.CreateTable<UserToken>();
+                });
+            });
         }
     }
 }

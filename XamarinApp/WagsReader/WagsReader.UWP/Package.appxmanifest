@@ -52,6 +52,11 @@
             <uap:DisplayName>WagsReader</uap:DisplayName>
           </uap:Protocol>
         </uap:Extension>
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="https">
+            <uap:DisplayName>HTTPS</uap:DisplayName>
+          </uap:Protocol>
+        </uap:Extension>
       </Extensions>
     </Application>
   </Applications>

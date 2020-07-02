@@ -8,6 +8,6 @@ namespace WagsReader.Interfaces
     {
         string GetInoreaderOAuthRedirectUrl();
 
-        bool IsUsingNativeUI();
+        string GetDeviceID();
     }
 }

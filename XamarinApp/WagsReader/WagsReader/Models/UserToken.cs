@@ -1,22 +1,33 @@
 ﻿using Newtonsoft.Json;
+using SQLite;
+using SQLiteNetExtensions.Attributes;
 
 namespace WagsReader.Models
 {
-    public class UserToken
+    public class UserToken : BaseModel
     {
-        [JsonProperty("id_token")]
-        public string IdToken { get; set; }
+        [PrimaryKey, AutoIncrement]
+        public int UserTokenId { get; set; }
+
+        [OneToOne("UserId", "User", CascadeOperations = CascadeOperation.CascadeRead, ReadOnly = true)]
+        public User User { get; set; }
+
+        [ForeignKey(typeof(User))]
+        public string UserId { get; set; }
 
         [JsonProperty("access_token")]
         public string AccessToken { get; set; }
 
-        [JsonProperty("expires_in")]
-        public int ExpiresIn { get; set; }
-
         [JsonProperty("token_type")]
         public string TokenType { get; set; }
 
+        [JsonProperty("expires_in")]
+        public int ExpiresIn { get; set; }
+        
         [JsonProperty("refresh_token")]
         public string RefreshToken { get; set; }
+
+        [JsonProperty("scope")]
+        public string Scope { get; set; }
     }
 }

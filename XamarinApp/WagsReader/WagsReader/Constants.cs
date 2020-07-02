@@ -6,10 +6,13 @@ namespace WagsReader
 {
     public static class Constants
     {
+        public static string DatabaseName = "WagsReader.db";
+
+        // INOREADER
         public static string InoreaderAuthorityUri = "https://www.inoreader.com";
         public static string InoreaderAuthorizeUri = "https://www.inoreader.com/oauth2/auth";
         public static string InoreaderTokenUri = "https://www.inoreader.com/oauth2/token";
-        public static string InoreaderRedirectUri = "com.kpwags.wagsreader://oauth2redirect";
+        public static string InoreaderRedirectUri = "https://localhost:44393/api/oauth/authcallback";
         public static string InoreaderApiUri = "https://www.inoreader.com/reader/api/0/";
         public static string InoreaderClientId = "999999529";
         public static string InoreaderClientSecret = "SECRET";

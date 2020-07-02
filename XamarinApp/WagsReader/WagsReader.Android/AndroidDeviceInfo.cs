@@ -12,9 +12,9 @@ namespace WagsReader.Droid
             return "com.kpwags.wagsreader://oauth2redirect/";
         }
 
-        public bool IsUsingNativeUI()
+        public string GetDeviceID()
         {
-            return false;
+            return Android.OS.Build.GetSerial();
         }
     }
 }

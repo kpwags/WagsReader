@@ -34,11 +34,9 @@ namespace WagsReader.Services
         {
             string code = result?.Properties["code"];
             string idToken = result?.IdToken;
-            string scope = result?.Properties["scope"];
             string state = result?.Properties["state"];
-            string sessionState = result?.Properties["session_state"];
 
-            return $"{Constants.InoreaderRedirectUri}#code={code}&id_token={idToken}&scope={scope}&state={state}&session_state={sessionState}";
+            return $"{Constants.InoreaderRedirectUri}#code={code}&id_token={idToken}&state={state}";
         }
 
     }
