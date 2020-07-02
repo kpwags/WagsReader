@@ -63,6 +63,7 @@
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="IOSDatabaseConnection.cs" />
     <Compile Include="IOSDeviceInfo.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />

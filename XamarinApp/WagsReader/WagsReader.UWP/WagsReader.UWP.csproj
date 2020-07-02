@@ -96,6 +96,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UWPDatabaseConnection.cs" />
     <Compile Include="UWPDeviceInfo.cs" />
   </ItemGroup>
   <ItemGroup>
