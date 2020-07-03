@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using WagsReaderAPI.Classes;
 
 namespace WagsReaderAPI
 {
@@ -18,6 +19,10 @@ namespace WagsReaderAPI
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+
+            AppSettings config = new AppSettings();
+            configuration.GetSection("Settings").Bind(config);
+            Utilities.AppSettings = config;
         }
 
         public IConfiguration Configuration { get; }

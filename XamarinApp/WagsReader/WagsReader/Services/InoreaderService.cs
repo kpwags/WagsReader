@@ -1,7 +1,9 @@
 ﻿using IdentityModel.Client;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using WagsReader.Models;
 using WagsReader.Services.Interfaces;
 using WebAuthenticatorDemo.Services;
 using Xamarin.Essentials;
@@ -12,32 +14,42 @@ namespace WagsReader.Services
     public class InoreaderService : IRSSService
     {
         IIdentityService IdentityService;
-        AuthorizeResponse AuthorizeResponse;
+        IRequestProvider RequestProvider;
 
         public InoreaderService()
         {
-            IdentityService = new IdentityService(new RequestProvider());
+            RequestProvider = new RequestProvider();
+            IdentityService = new InoreaderIdentityService();
+
         }
 
         public async Task<object> Login()
         {
-            string authUrl = IdentityService.CreateAuthorizationRequest();
-            var authResult = await WebAuthenticator.AuthenticateAsync(new Uri(authUrl), new Uri(Constants.InoreaderRedirectUri));
+            try
+            {
+                Classes.AuthRequest authRequest = IdentityService.CreateAuthorizationRequest();
+                var authResponse = await WebAuthenticator.AuthenticateAsync(new Uri(authRequest.Url), new Uri(Constants.InoreaderRedirectUri));
 
-            string raw = ParseAuthenticatorResult(authResult);
-            AuthorizeResponse = new AuthorizeResponse(raw);
+                string code = authResponse?.Properties["code"];
+                string state = authResponse?.Properties["state"];
 
-            return AuthorizeResponse;
+                if (state != authRequest.CSRFToken)
+                {
+                    throw new Exception("Response token does not match request token.");
+                }
+
+                var data = new Dictionary<string, string>();
+                data.Add("code", code);
+
+                var token = await RequestProvider.PostAsync<UserToken>($"{Constants.WagsReaderApiUri}/inoreader/getusertoken", data);
+                
+                return token;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error authenticating with Inoreader: {ex.Message}");
+                return null;
+            }
         }
-
-        private string ParseAuthenticatorResult(WebAuthenticatorResult result)
-        {
-            string code = result?.Properties["code"];
-            string idToken = result?.IdToken;
-            string state = result?.Properties["state"];
-
-            return $"{Constants.InoreaderRedirectUri}#code={code}&id_token={idToken}&state={state}";
-        }
-
     }
 }

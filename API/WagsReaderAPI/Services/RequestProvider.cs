@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -7,10 +6,10 @@ using IdentityModel.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using WagsReader.Exceptions;
-using WagsReader.Services.Interfaces;
+using WagsReaderAPI.Exceptions;
+using WagsReaderAPI.Services.Interfaces;
 
-namespace WebAuthenticatorDemo.Services
+namespace WagsReaderAPI.Services
 {
     public class RequestProvider : IRequestProvider
     {
@@ -40,19 +39,18 @@ namespace WebAuthenticatorDemo.Services
             return serialized;
         }
 
-        public async Task<TResult> PostAsync<TResult>(string uri, Dictionary<string,string> data, string clientId = "", string clientSecret = "")
+        public async Task<TResult> PostAsync<TResult>(string uri, string data, string clientId, string clientSecret)
         {
             if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
             {
                 AddBasicAuthenticationHeader(clientId, clientSecret);
             }
 
-            var content = new FormUrlEncodedContent(data);
-
-            //content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            var content = new StringContent(data);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
             HttpResponseMessage response = await _client.PostAsync(uri, content);
 
-            //await HandleResponse(response);
+            await HandleResponse(response);
             string serialized = await response.Content.ReadAsStringAsync();
 
             TResult result = await Task.Run(() =>

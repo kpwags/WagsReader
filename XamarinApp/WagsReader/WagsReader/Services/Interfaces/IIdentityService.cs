@@ -1,12 +1,12 @@
 ﻿using System.Threading.Tasks;
+using WagsReader.Classes;
 using WagsReader.Models;
 
 namespace WagsReader.Services.Interfaces
 {
     public interface IIdentityService
     {
-        string CreateAuthorizationRequest();
-        Task<UserToken> GetTokenAsync(string code);
-        Task<string> GetAsync(string uri, string accessToken);
+        AuthRequest CreateAuthorizationRequest();
+
     }
 }
