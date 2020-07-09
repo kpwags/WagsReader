@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -6,8 +6,9 @@ using IdentityModel.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using WagsReaderAPI.Exceptions;
-using WagsReaderAPI.Services.Interfaces;
+using WagsReaderLibrary;
+using WagsReaderLibrary.Exceptions;
+using WagsReaderLibrary.Interfaces;
 
 namespace WagsReaderAPI.Services
 {
@@ -34,29 +35,47 @@ namespace WagsReaderAPI.Services
             _client.SetBearerToken(token);
             HttpResponseMessage response = await _client.GetAsync(uri);
 
-            await HandleResponse(response);
+            await ApiUtilities.HandleResponse(response);
             string serialized = await response.Content.ReadAsStringAsync();
             return serialized;
         }
 
-        public async Task<TResult> PostAsync<TResult>(string uri, string data, string clientId, string clientSecret)
+        public async Task<TResult> PostAsync<TResult>(string uri, HttpContent content, string contentType = "application/x-www-form-urlencoded", string clientId = "", string clientSecret = "")
         {
-            if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
+            try
             {
-                AddBasicAuthenticationHeader(clientId, clientSecret);
+                if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
+                {
+                    AddBasicAuthenticationHeader(clientId, clientSecret);
+                }
+
+                if (contentType != null)
+                {
+                    content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                }
+
+                HttpResponseMessage response = await _client.PostAsync(uri, content);
+
+                await ApiUtilities.HandleResponse(response);
+                string serialized = await response.Content.ReadAsStringAsync();
+
+                TResult result = await Task.Run(() =>
+                    JsonConvert.DeserializeObject<TResult>(serialized, _serializerSettings));
+
+                return result;
             }
-
-            var content = new StringContent(data);
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-            HttpResponseMessage response = await _client.PostAsync(uri, content);
-
-            await HandleResponse(response);
-            string serialized = await response.Content.ReadAsStringAsync();
-
-            TResult result = await Task.Run(() =>
-                JsonConvert.DeserializeObject<TResult>(serialized, _serializerSettings));
-
-            return result;
+            catch (ServiceAuthenticationException ex)
+            {
+                throw new ServiceAuthenticationException(ex.Content, ex.AuthErrorMessage);
+            }
+            catch (ApiRequestExceptionException ex)
+            {
+                throw new ApiRequestExceptionException(ex.HttpCode, ex.Message, ex.Content);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
 
         HttpClient CreateHttpClient(string token = "")
@@ -80,22 +99,6 @@ namespace WagsReaderAPI.Services
                 return;
 
             _client.DefaultRequestHeaders.Authorization = new BasicAuthenticationHeaderValue(clientId, clientSecret);
-        }
-
-        async Task HandleResponse(HttpResponseMessage response)
-        {
-            if (!response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-
-                if (response.StatusCode == HttpStatusCode.Forbidden ||
-                    response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    throw new ServiceAuthenticationException(content);
-                }
-
-                throw new HttpRequestExceptionEx(response.StatusCode, content);
-            }
         }
     }
 }

@@ -4,6 +4,6 @@ namespace WagsReader.Services.Interfaces
 {
     public interface IRSSService
     {
-        Task<object> Login();
+        Task<Models.User> Login();
     }
 }

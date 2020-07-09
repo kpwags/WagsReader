@@ -1,13 +1,7 @@
-﻿using System;
+﻿using IdentityModel.Client;
+using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using IdentityModel;
-using IdentityModel.Client;
 using WagsReader.Classes;
-using WagsReader.Models;
 using WagsReader.Services.Interfaces;
 
 namespace WagsReader.Services

@@ -33,11 +33,11 @@ namespace WagsReader.ViewModels
             try
             {
                 RSSService = new InoreaderService();
-                AuthorizeResponse authorizationResponse = (AuthorizeResponse)await RSSService.Login();
+                var user = await RSSService.Login();
 
-                if (authorizationResponse.IsError)
+                if (user == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("ERROR: {0}", authorizationResponse.Error);
+                    System.Diagnostics.Debug.WriteLine("ERROR: {0}", "Error logging in");
                 }
             }
             catch (AuthException ex)

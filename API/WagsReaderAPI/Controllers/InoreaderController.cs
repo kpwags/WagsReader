@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
 using System.Net;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using WagsReaderAPI.Classes;
-using WagsReaderAPI.Models;
-using WagsReaderAPI.Requests;
 using WagsReaderAPI.Services;
+using WagsReaderLibrary;
+using WagsReaderLibrary.Exceptions;
+using WagsReaderLibrary.Inoreader.Models;
+using WagsReaderLibrary.Inoreader.Requests;
+using WagsReaderLibrary.Requests;
 
 namespace WagsReaderAPI.Controllers
 {
@@ -30,21 +31,63 @@ namespace WagsReaderAPI.Controllers
             return Redirect("com.kpwags.wagsreader://oauth2redirect");
         }
 
-        [HttpPost]
-        public async Task<ActionResult<UserToken>> GetUserToken(UserTokenRequest req)
+        [HttpPost("getusertoken")]
+        public async Task<ActionResult<ApiResponse<UserToken>>> GetUserToken(UserTokenRequest req)
         {
-            var requestProvider = new RequestProvider();
+            try
+            {
+                var requestProvider = new RequestProvider();
+                var InoreaderTokenRequest = new AuthTokenRequest
+                {
+                    Code = req.code,
+                    RedirectURL = WebUtility.UrlEncode(Utilities.AppSettings.InoreaderRedirectUri),
+                    ClientId = Utilities.AppSettings.InoreaderAppID,
+                    ClientSecret = Utilities.AppSettings.InoreaderAppKey
+                };
 
-            string data = string.Format("code={0}&redirect_uri={1}&client_id={2}&client_secret={3}&scope={4}&grant_type=authorization_code", 
-                                            req.code,
-                                            WebUtility.UrlEncode(Utilities.AppSettings.InoreaderRedirectUri), 
-                                            Utilities.AppSettings.InoreaderAppID, 
-                                            Utilities.AppSettings.InoreaderAppKey,
-                                            WebUtility.UrlEncode(Utilities.AppSettings.InoreaderScope));
+                var content = new System.Net.Http.StringContent(JsonConvert.SerializeObject(InoreaderTokenRequest), System.Text.Encoding.UTF8, "application/json");//ApiUtilities.GetRequestContent(InoreaderTokenRequest);
 
-            var token = await requestProvider.PostAsync<UserToken>(Utilities.AppSettings.InoreaderTokenUri, data, "", "");
-            //return token;
-            return token;
+                var token = await requestProvider.PostAsync<UserToken>(Utilities.AppSettings.InoreaderTokenUri, content);
+
+                var resp = new ApiResponse<UserToken>
+                {
+                    Data = token
+                };
+
+                return resp;
+            }
+            catch (ServiceAuthenticationException ex)
+            {
+                return new ApiResponse<UserToken>
+                {
+                    Data = null,
+                    Code = HttpStatusCode.Unauthorized,
+                    ErrorContent = ex.Content,
+                    ErrorMessage = ex.AuthErrorMessage,
+                    ExceptionType = typeof(ServiceAuthenticationException)
+                };
+            }
+            catch (ApiRequestExceptionException ex)
+            {
+                return new ApiResponse<UserToken>
+                {
+                    Data = null,
+                    Code = ex.HttpCode,
+                    ErrorContent = ex.Content,
+                    ErrorMessage = ex.Message,
+                    ExceptionType = typeof(ApiRequestExceptionException)
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<UserToken>
+                {
+                    Data = null,
+                    Code = HttpStatusCode.BadRequest,
+                    ErrorMessage = ex.Message,
+                    ExceptionType = typeof(Exception)
+                };
+            }
         }
     }
 }

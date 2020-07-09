@@ -1,11 +1,13 @@
 ﻿using IdentityModel.Client;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WagsReader.Models;
 using WagsReader.Services.Interfaces;
-using WebAuthenticatorDemo.Services;
+using WagsReaderLibrary;
+using WagsReaderLibrary.Interfaces;
+using WagsReaderLibrary.Requests;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 
@@ -20,10 +22,9 @@ namespace WagsReader.Services
         {
             RequestProvider = new RequestProvider();
             IdentityService = new InoreaderIdentityService();
-
         }
 
-        public async Task<object> Login()
+        public async Task<User> Login()
         {
             try
             {
@@ -38,12 +39,28 @@ namespace WagsReader.Services
                     throw new Exception("Response token does not match request token.");
                 }
 
-                var data = new Dictionary<string, string>();
-                data.Add("code", code);
+                var tokenRequest = new UserTokenRequest()
+                {
+                    code = code
+                };
 
-                var token = await RequestProvider.PostAsync<UserToken>($"{Constants.WagsReaderApiUri}/inoreader/getusertoken", data);
+                var content = ApiUtilities.GetRequestContent(tokenRequest);
+
+                var response = await RequestProvider.PostAsync<ApiResponse<UserToken>>($"{Constants.WagsReaderApiUri}/inoreader/getusertoken", content, null);
+
+                if (response.Data == null)
+                {
+                    throw new Exception(response.ErrorMessage);
+                }
+
+                var userJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/user-info", response.Data.AccessToken);
+                var user = JsonConvert.DeserializeObject<User>(userJson);
+
+                user.Token = response.Data;
+
+                await User.Save(user);
                 
-                return token;
+                return user;
             }
             catch (Exception ex)
             {

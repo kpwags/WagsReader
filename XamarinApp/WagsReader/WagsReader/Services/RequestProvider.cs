@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -7,10 +8,10 @@ using IdentityModel.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using WagsReader.Exceptions;
-using WagsReader.Services.Interfaces;
+using WagsReaderLibrary;
+using WagsReaderLibrary.Interfaces;
 
-namespace WebAuthenticatorDemo.Services
+namespace WagsReader.Services
 {
     public class RequestProvider : IRequestProvider
     {
@@ -35,24 +36,26 @@ namespace WebAuthenticatorDemo.Services
             _client.SetBearerToken(token);
             HttpResponseMessage response = await _client.GetAsync(uri);
 
-            await HandleResponse(response);
+            await ApiUtilities.HandleResponse(response);
             string serialized = await response.Content.ReadAsStringAsync();
             return serialized;
         }
 
-        public async Task<TResult> PostAsync<TResult>(string uri, Dictionary<string,string> data, string clientId = "", string clientSecret = "")
+        public async Task<TResult> PostAsync<TResult>(string uri, HttpContent content, string contentType = "application/x-www-form-urlencoded", string clientId = "", string clientSecret = "")
         {
             if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
             {
                 AddBasicAuthenticationHeader(clientId, clientSecret);
             }
 
-            var content = new FormUrlEncodedContent(data);
-
-            //content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            if (contentType != null)
+            {
+                content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            }
+            
             HttpResponseMessage response = await _client.PostAsync(uri, content);
 
-            //await HandleResponse(response);
+            await ApiUtilities.HandleResponse(response);
             string serialized = await response.Content.ReadAsStringAsync();
 
             TResult result = await Task.Run(() =>
@@ -63,7 +66,19 @@ namespace WebAuthenticatorDemo.Services
 
         HttpClient CreateHttpClient(string token = "")
         {
-            _client = new HttpClient();
+            _client = new HttpClient
+            (
+                new HttpClientHandler()
+                {
+                    ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
+                    {
+                        //bypass
+                        return true;
+                    },
+                },
+                false
+            );
+
             _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             if (!string.IsNullOrEmpty(token))
@@ -82,22 +97,6 @@ namespace WebAuthenticatorDemo.Services
                 return;
 
             _client.DefaultRequestHeaders.Authorization = new BasicAuthenticationHeaderValue(clientId, clientSecret);
-        }
-
-        async Task HandleResponse(HttpResponseMessage response)
-        {
-            if (!response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-
-                if (response.StatusCode == HttpStatusCode.Forbidden ||
-                    response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    throw new ServiceAuthenticationException(content);
-                }
-
-                throw new HttpRequestExceptionEx(response.StatusCode, content);
-            }
         }
     }
 }

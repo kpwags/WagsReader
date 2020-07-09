@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WagsReaderLibrary", "WagsReaderLibrary\WagsReaderLibrary.csproj", "{3C984B18-30BB-4465-9DF5-F959EE804324}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3C984B18-30BB-4465-9DF5-F959EE804324}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C984B18-30BB-4465-9DF5-F959EE804324}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C984B18-30BB-4465-9DF5-F959EE804324}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C984B18-30BB-4465-9DF5-F959EE804324}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F7D76AE5-BF36-4035-9416-A2D3DCB7394B}
+	EndGlobalSection
+EndGlobal
