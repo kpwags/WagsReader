@@ -10,6 +10,7 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using WagsReaderLibrary;
 using WagsReaderLibrary.Interfaces;
+using WagsReaderLibrary.Json;
 
 namespace WagsReader.Services
 {
@@ -18,17 +19,21 @@ namespace WagsReader.Services
         HttpClient _client;
         readonly JsonSerializerSettings _serializerSettings;
 
-        public RequestProvider()
+        public RequestProvider(string baseAddress = "")
         {
             _client = CreateHttpClient(string.Empty);
 
+            if (baseAddress != "")
+            {
+                _client.BaseAddress = new Uri(baseAddress);
+            }
+
             _serializerSettings = new JsonSerializerSettings
             {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                ContractResolver = new StandardContractResolver(true),
                 DateTimeZoneHandling = DateTimeZoneHandling.Utc,
                 NullValueHandling = NullValueHandling.Ignore
             };
-            _serializerSettings.Converters.Add(new StringEnumConverter());
         }
 
         public async Task<string> GetAsync(string uri, string token = "")
@@ -41,22 +46,20 @@ namespace WagsReader.Services
             return serialized;
         }
 
-        public async Task<TResult> PostAsync<TResult>(string uri, HttpContent content, string contentType = "application/x-www-form-urlencoded", string clientId = "", string clientSecret = "")
+        public async Task<TResult> PostAsync<TResult>(string uri, HttpContent content, string clientId = "", string clientSecret = "")
         {
             if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
             {
                 AddBasicAuthenticationHeader(clientId, clientSecret);
             }
-
-            if (contentType != null)
-            {
-                content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-            }
             
             HttpResponseMessage response = await _client.PostAsync(uri, content);
 
             await ApiUtilities.HandleResponse(response);
+
             string serialized = await response.Content.ReadAsStringAsync();
+
+            System.Diagnostics.Debug.WriteLine($"Response: {serialized}");
 
             TResult result = await Task.Run(() =>
                 JsonConvert.DeserializeObject<TResult>(serialized, _serializerSettings));

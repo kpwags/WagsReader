@@ -2,6 +2,7 @@
 
 namespace WagsReaderLibrary.Inoreader.Requests
 {
+    [JsonObject]
     public class AuthTokenRequest
     {
         [JsonProperty("code")]

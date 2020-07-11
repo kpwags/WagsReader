@@ -29,5 +29,19 @@ namespace WagsReader.Models
 
         [JsonProperty("scope")]
         public string Scope { get; set; }
+
+        public UserToken()
+        {
+
+        }
+
+        public UserToken(WagsReaderLibrary.Inoreader.Models.UserToken token)
+        {
+            AccessToken = token.AccessToken;
+            TokenType = token.TokenType;
+            ExpiresIn = token.ExpiresIn;
+            RefreshToken = token.RefreshToken;
+            Scope = token.Scope;
+        }
     }
 }

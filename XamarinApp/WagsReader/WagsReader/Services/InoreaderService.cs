@@ -44,9 +44,9 @@ namespace WagsReader.Services
                     code = code
                 };
 
-                var content = ApiUtilities.GetRequestContent(tokenRequest);
+                var content = ApiUtilities.GetRequestContentAsJson(tokenRequest);
 
-                var response = await RequestProvider.PostAsync<ApiResponse<UserToken>>($"{Constants.WagsReaderApiUri}/inoreader/getusertoken", content, null);
+                var response = await RequestProvider.PostAsync<ApiResponse<WagsReaderLibrary.Inoreader.Models.UserToken>>($"{Constants.WagsReaderApiUri}/inoreader/getusertoken", content);
 
                 if (response.Data == null)
                 {
@@ -56,7 +56,7 @@ namespace WagsReader.Services
                 var userJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/user-info", response.Data.AccessToken);
                 var user = JsonConvert.DeserializeObject<User>(userJson);
 
-                user.Token = response.Data;
+                user.Token = new UserToken(response.Data);
 
                 await User.Save(user);
                 

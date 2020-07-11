@@ -35,9 +35,9 @@ namespace WagsReader.ViewModels
                 RSSService = new InoreaderService();
                 var user = await RSSService.Login();
 
-                if (user == null)
+                if (user != null)
                 {
-                    System.Diagnostics.Debug.WriteLine("ERROR: {0}", "Error logging in");
+                    
                 }
             }
             catch (AuthException ex)

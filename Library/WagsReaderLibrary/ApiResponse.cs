@@ -1,14 +1,13 @@
-﻿using System;
-using System.Net;
+﻿using Newtonsoft.Json;
 
 namespace WagsReaderLibrary
 {
     public class ApiResponse<T>
     {
+        [JsonProperty("data")]
         public T Data { get; set; }
-        public HttpStatusCode Code { get; set; } = HttpStatusCode.OK;
+
+        [JsonProperty("error")]
         public string ErrorMessage { get; set; } = "";
-        public string ErrorContent { get; set; } = "{}";
-        public Type ExceptionType { get; set; }
     }
 }

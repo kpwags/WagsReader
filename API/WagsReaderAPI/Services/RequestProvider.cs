@@ -9,6 +9,7 @@ using Newtonsoft.Json.Serialization;
 using WagsReaderLibrary;
 using WagsReaderLibrary.Exceptions;
 using WagsReaderLibrary.Interfaces;
+using WagsReaderLibrary.Json;
 
 namespace WagsReaderAPI.Services
 {
@@ -17,17 +18,20 @@ namespace WagsReaderAPI.Services
         HttpClient _client;
         readonly JsonSerializerSettings _serializerSettings;
 
-        public RequestProvider()
+        public RequestProvider(string baseAddress = "")
         {
             _client = CreateHttpClient(string.Empty);
 
+            if (baseAddress != "")
+            {
+                _client.BaseAddress = new Uri(baseAddress);
+            }
+
             _serializerSettings = new JsonSerializerSettings
             {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
                 DateTimeZoneHandling = DateTimeZoneHandling.Utc,
                 NullValueHandling = NullValueHandling.Ignore
             };
-            _serializerSettings.Converters.Add(new StringEnumConverter());
         }
 
         public async Task<string> GetAsync(string uri, string token = "")
@@ -40,7 +44,7 @@ namespace WagsReaderAPI.Services
             return serialized;
         }
 
-        public async Task<TResult> PostAsync<TResult>(string uri, HttpContent content, string contentType = "application/x-www-form-urlencoded", string clientId = "", string clientSecret = "")
+        public async Task<TResult> PostAsync<TResult>(string uri, HttpContent content, string clientId = "", string clientSecret = "")
         {
             try
             {
@@ -49,15 +53,12 @@ namespace WagsReaderAPI.Services
                     AddBasicAuthenticationHeader(clientId, clientSecret);
                 }
 
-                if (contentType != null)
-                {
-                    content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-                }
-
                 HttpResponseMessage response = await _client.PostAsync(uri, content);
 
                 await ApiUtilities.HandleResponse(response);
                 string serialized = await response.Content.ReadAsStringAsync();
+                System.Diagnostics.Debug.WriteLine($"Response Content: {serialized}");
+
 
                 TResult result = await Task.Run(() =>
                     JsonConvert.DeserializeObject<TResult>(serialized, _serializerSettings));
@@ -81,7 +82,7 @@ namespace WagsReaderAPI.Services
         HttpClient CreateHttpClient(string token = "")
         {
             _client = new HttpClient();
-            _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            //_client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             if (!string.IsNullOrEmpty(token))
             {

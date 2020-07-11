@@ -2,7 +2,11 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WagsReaderAPI.Classes;
 using WagsReaderAPI.Services;
@@ -25,7 +29,7 @@ namespace WagsReaderAPI.Controllers
             _logger = logger;
         }
 
-        [HttpGet]
+        [HttpGet("authcallback")]
         public ActionResult AuthCallback()
         {
             return Redirect("com.kpwags.wagsreader://oauth2redirect");
@@ -36,7 +40,7 @@ namespace WagsReaderAPI.Controllers
         {
             try
             {
-                var requestProvider = new RequestProvider();
+                var requestProvider = new RequestProvider(Utilities.AppSettings.InoreaderBaseUri);
                 var InoreaderTokenRequest = new AuthTokenRequest
                 {
                     Code = req.code,
@@ -45,9 +49,15 @@ namespace WagsReaderAPI.Controllers
                     ClientSecret = Utilities.AppSettings.InoreaderAppKey
                 };
 
-                var content = new System.Net.Http.StringContent(JsonConvert.SerializeObject(InoreaderTokenRequest), System.Text.Encoding.UTF8, "application/json");//ApiUtilities.GetRequestContent(InoreaderTokenRequest);
+                var content = ApiUtilities.GetRequestContentAsDictionary(InoreaderTokenRequest);
 
-                var token = await requestProvider.PostAsync<UserToken>(Utilities.AppSettings.InoreaderTokenUri, content);
+                string contentSerialized = await content.ReadAsStringAsync();
+                Debug.WriteLine($"Request Content: {contentSerialized}");
+
+                var token = await requestProvider.PostAsync<UserToken>(
+                    uri: Utilities.AppSettings.InoreaderTokenUri,
+                    content: content
+                );
 
                 var resp = new ApiResponse<UserToken>
                 {
@@ -61,10 +71,7 @@ namespace WagsReaderAPI.Controllers
                 return new ApiResponse<UserToken>
                 {
                     Data = null,
-                    Code = HttpStatusCode.Unauthorized,
-                    ErrorContent = ex.Content,
-                    ErrorMessage = ex.AuthErrorMessage,
-                    ExceptionType = typeof(ServiceAuthenticationException)
+                    ErrorMessage = ex.AuthErrorMessage
                 };
             }
             catch (ApiRequestExceptionException ex)
@@ -72,10 +79,7 @@ namespace WagsReaderAPI.Controllers
                 return new ApiResponse<UserToken>
                 {
                     Data = null,
-                    Code = ex.HttpCode,
-                    ErrorContent = ex.Content,
-                    ErrorMessage = ex.Message,
-                    ExceptionType = typeof(ApiRequestExceptionException)
+                    ErrorMessage = ex.Message
                 };
             }
             catch (Exception ex)
@@ -83,9 +87,7 @@ namespace WagsReaderAPI.Controllers
                 return new ApiResponse<UserToken>
                 {
                     Data = null,
-                    Code = HttpStatusCode.BadRequest,
-                    ErrorMessage = ex.Message,
-                    ExceptionType = typeof(Exception)
+                    ErrorMessage = ex.Message
                 };
             }
         }
