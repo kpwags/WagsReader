@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="WagsReader.Views.AddAccountPage"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Add Account"
+    mc:Ignorable="d">
+    <ContentPage.Content>
+        <StackLayout>
+            <StackLayout IsVisible="{Binding ShowStep1}">
+                <Label
+                    Margin="0,40,0,0"
+                    FontSize="18"
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="Center"
+                    Text="Login with your RSS account to begin."
+                    WidthRequest="600" />
+                <Label
+                    Margin="0,0,0,0"
+                    FontAttributes="Italic"
+                    FontSize="18"
+                    HorizontalOptions="Center"
+                    HorizontalTextAlignment="Center"
+                    Text="(More to Come)"
+                    WidthRequest="600" />
+                <Button
+                    Margin="0,40,0,0"
+                    Command="{Binding LoginToInoreader}"
+                    HeightRequest="48"
+                    Style="{StaticResource StandardButton}"
+                    Text="INOREADER"
+                    WidthRequest="200" />
+            </StackLayout>
+
+            <StackLayout IsVisible="{Binding ShowStep2}">
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="Account Nickname"
+                    TextColor="Black" />
+                <Entry Text="{Binding AccountName}" />
+                <Button
+                    Margin="0,40,0,0"
+                    Command="{Binding SaveAccount}"
+                    HeightRequest="48"
+                    Style="{StaticResource StandardButton}"
+                    Text="Save"
+                    WidthRequest="200" />
+            </StackLayout>
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
