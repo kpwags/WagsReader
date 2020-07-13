@@ -10,17 +10,18 @@ using Xamarin.Forms.Xaml;
 namespace WagsReader.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class InoreaderLogin : ContentPage
+    public partial class AddAccountPage : ContentPage
     {
-        public InoreaderLogin()
+        public AddAccountPage()
         {
             InitializeComponent();
-            BindingContext = new InoreaderLoginViewModel();
-        }
 
-        private void BackToHomeButton_Clicked(object sender, EventArgs e)
-        {
-            Navigation.PopAsync();
+            var vm = new AddAccountPageViewModel
+            {
+                Navigation = Navigation
+            };
+
+            BindingContext = vm;
         }
     }
 }

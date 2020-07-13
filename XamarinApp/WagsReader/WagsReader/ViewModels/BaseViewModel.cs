@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using WagsReader.Services.Interfaces;
+using Xamarin.Forms;
 
 namespace WagsReader.ViewModels
 {
@@ -9,7 +9,7 @@ namespace WagsReader.ViewModels
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        //public INavigationService NavigationService { get; } = App.NavigationService;
+        public INavigation Navigation;
 
         public Func<object, bool> AllowNavigation => ShouldAllowNavigation;
 

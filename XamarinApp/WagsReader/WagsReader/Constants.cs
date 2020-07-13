@@ -20,4 +20,9 @@ namespace WagsReader
         public static string InoreaderClientId = "999999537";
         public static string InoreaderScope = "read write";
     }
+
+    public enum AccountType
+    {
+        Inoreader
+    }
 }

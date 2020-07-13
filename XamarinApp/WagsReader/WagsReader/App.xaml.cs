@@ -30,7 +30,7 @@ namespace WagsReader
         {
             InitializeComponent();
 
-            MainPage = new NavigationPage(new Views.Home());
+            MainPage = new Views.MainPage ();
 
             Task.Run(async () =>
             {
@@ -59,6 +59,7 @@ namespace WagsReader
                 {
                     db.CreateTable<User>();
                     db.CreateTable<UserToken>();
+                    db.CreateTable<Folder>();
                 });
             });
         }

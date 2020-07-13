@@ -4,6 +4,7 @@ using SQLiteNetExtensions.Attributes;
 
 namespace WagsReader.Models
 {
+    [Table("UserToken")]
     public class UserToken : BaseModel
     {
         [PrimaryKey, AutoIncrement]

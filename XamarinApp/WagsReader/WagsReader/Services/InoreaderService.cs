@@ -1,7 +1,9 @@
 ﻿using IdentityModel.Client;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using WagsReader.Models;
 using WagsReader.Services.Interfaces;
@@ -15,8 +17,8 @@ namespace WagsReader.Services
 {
     public class InoreaderService : IRSSService
     {
-        IIdentityService IdentityService;
-        IRequestProvider RequestProvider;
+        readonly IIdentityService IdentityService;
+        readonly IRequestProvider RequestProvider;
 
         public InoreaderService()
         {
@@ -56,7 +58,12 @@ namespace WagsReader.Services
                 var userJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/user-info", response.Data.AccessToken);
                 var user = JsonConvert.DeserializeObject<User>(userJson);
 
+                user.AccountName = $"Inoreader ({user.Username})";
                 user.Token = new UserToken(response.Data);
+
+                // get folders
+                var folderJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/tag/list?types=1&counts=1", response.Data.AccessToken);
+                user.Folders = GetFoldersFromJson(folderJson);                
 
                 await User.Save(user);
                 
@@ -67,6 +74,20 @@ namespace WagsReader.Services
                 System.Diagnostics.Debug.WriteLine($"Error authenticating with Inoreader: {ex.Message}");
                 return null;
             }
+        }
+
+        protected List<Folder> GetFoldersFromJson(string folderJson)
+        {
+            var folderResponse = JsonConvert.DeserializeObject<WagsReaderLibrary.Inoreader.Models.FolderTagList>(folderJson);
+
+            var folders = new List<Folder>();
+
+            foreach (var f in folderResponse.Tags.Where(t => t.Type == "folder"))
+            {
+                folders.Add(new Folder { ExternalId = f.ExternalId, SortId = f.SortId, Type = f.Type, UnreadCount = f.UnreadCount, UnseenCount = f.UnseenCount });
+            }
+
+            return folders;
         }
     }
 }

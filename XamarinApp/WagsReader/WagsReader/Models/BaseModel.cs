@@ -14,8 +14,7 @@ namespace WagsReader.Models
         {
             if (_db == null)
             {
-                _db = DependencyService.Get<IDatabaseConnection>().DBConnection();
-                _db.Execute("PRAGMA foreign_keys = ON");
+                InstantiateDatabase();
             }
         }
 
@@ -41,6 +40,12 @@ namespace WagsReader.Models
 
             string query = $"DROP TABLE IF EXISTS [{tableName}]";
             return _db.Execute(query);
+        }
+
+        public void InstantiateDatabase()
+        {
+            _db = DependencyService.Get<IDatabaseConnection>().DBConnection();
+            _db.Execute("PRAGMA foreign_keys = ON");
         }
     }
 }
