@@ -40,12 +40,12 @@
                                         </Style>
                                     </Label.Style>
                                 </Label>
-
-                                <Label
+                                <Frame
                                     Grid.Column="1"
                                     IsVisible="{Binding ShowUnread}"
-                                    Style="{StaticResource UnreadIndicator}"
-                                    Text="{Binding UnreadCount}" />
+                                    Style="{StaticResource UnreadIndicator}">
+                                    <Label Style="{StaticResource UnreadIndicatorLabel}" Text="{Binding DisplayCount}" />
+                                </Frame>
                             </Grid>
                         </ViewCell>
                     </DataTemplate>
