@@ -32,5 +32,54 @@
             <Setter Property="TextColor" Value="White" />
         </Style>
         <!--  END SIDEBAR ITEMS  -->
+
+        <!--  LABEL STYLES  -->
+        <Style x:Key="LoadingMessageLabel" TargetType="Label">
+            <Setter Property="TextColor" Value="Black" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="HorizontalTextAlignment" Value="Center" />
+            <Setter Property="VerticalTextAlignment" Value="End" />
+        </Style>
+        <!--  END LABEL STYLES  -->
+
+        <!--  CONTROL TEMPLATES  -->
+        <ControlTemplate x:Key="BaseTemplate">
+            <AbsoluteLayout>
+                <StackLayout
+                    AbsoluteLayout.LayoutBounds="0,0,1,1"
+                    AbsoluteLayout.LayoutFlags="All"
+                    HorizontalOptions="Fill"
+                    Spacing="0"
+                    VerticalOptions="Fill">
+                    <ContentPresenter VerticalOptions="FillAndExpand" />
+                </StackLayout>
+                <ContentView
+                    AbsoluteLayout.LayoutBounds="0,0,1,1"
+                    AbsoluteLayout.LayoutFlags="All"
+                    BackgroundColor="DarkSlateGray"
+                    BindingContext="{TemplateBinding BindingContext}"
+                    IsVisible="{TemplateBinding BindingContext.IsLoading}"
+                    Opacity="0.5" />
+                <Frame
+                    AbsoluteLayout.LayoutBounds="0.5,0.5,250,100"
+                    AbsoluteLayout.LayoutFlags="PositionProportional"
+                    BackgroundColor="LightGray"
+                    CornerRadius="15"
+                    IsVisible="{TemplateBinding BindingContext.IsLoading}">
+                    <StackLayout VerticalOptions="CenterAndExpand">
+                        <Label
+                            IsVisible="{TemplateBinding BindingContext.IsLoading}"
+                            Style="{StaticResource LoadingMessageLabel}"
+                            Text="{TemplateBinding BindingContext.LoadingText}" />
+                        <ActivityIndicator
+                            Margin="0,10,0,0"
+                            IsRunning="{TemplateBinding BindingContext.IsLoading}"
+                            IsVisible="{TemplateBinding BindingContext.IsLoading}"
+                            Color="Black" />
+                    </StackLayout>
+                </Frame>
+            </AbsoluteLayout>
+        </ControlTemplate>
+        <!--  END CONTROL TEMPLATES  -->
     </Application.Resources>
 </Application>

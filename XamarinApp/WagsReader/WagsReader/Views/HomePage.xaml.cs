@@ -25,11 +25,11 @@ namespace WagsReader.Views
 
             BindingContext = vm;
         }
-        protected override void OnAppearing()
+        protected override async void OnAppearing()
         {
             base.OnAppearing();
 
-            //await vm.LoadData();
+            await vm.LoadData();
         }
     }
 }

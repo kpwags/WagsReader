@@ -60,6 +60,9 @@ namespace WagsReader
                     db.CreateTable<User>();
                     db.CreateTable<UserToken>();
                     db.CreateTable<Folder>();
+                    db.CreateTable<Feed>();
+                    db.CreateTable<FeedFolder>();
+                    db.CreateTable<FeedItem>();
                 });
             });
         }

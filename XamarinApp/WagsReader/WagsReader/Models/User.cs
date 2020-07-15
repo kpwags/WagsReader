@@ -15,29 +15,40 @@ namespace WagsReader.Models
     [Table("User")]
     public class User : BaseModel
     {
-        [PrimaryKey]
-        [JsonProperty("userId")]
-        public string UserId { get; set; }
+        [PrimaryKey, AutoIncrement]
+        [Column("id")]
+        public int ID { get; set; }
 
+        [JsonProperty("userId")]
+        public string ExternalId { get; set; }
+
+        [Column("type")]
         public AccountType Type { get; set; }
 
+        [Column("account_name")]
         public string AccountName { get; set; }
 
+        [Column("username")]
         [JsonProperty("userName")]
         public string Username { get; set; }
 
+        [Column("user_profile_id")]
         [JsonProperty("userProfileId")]
         public string UserProfileId { get; set; }
 
+        [Column("email")]
         [JsonProperty("userEmail")]
         public string UserEmail { get; set; }
 
+        [Column("is_blogger_user")]
         [JsonProperty("isBloggerUser")]
         public bool IsBloggerUser { get; set; }
 
+        [Column("signup_timestamp")]
         [JsonProperty("signupTimeSec")]
         public long SignupTimeSec { get; set; }
 
+        [Column("is_multilogin_enabled")]
         [JsonProperty("isMultiLoginEnabled")]
         public bool IsMultiLoginEnabled { get; set; }
 
@@ -66,11 +77,11 @@ namespace WagsReader.Models
             });
         }
 
-        public static async Task<User> GetUserAsync(string userId, bool recursive = true)
+        public static async Task<User> GetUserAsync(int userId, bool recursive = true)
         {
             return await Task.Run(() =>
             {
-                User user = _db.Table<User>().Where(u => u.UserId == userId).FirstOrDefault();
+                User user = _db.Table<User>().Where(u => u.ID == userId).FirstOrDefault();
 
                 if (user != null)
                 {
@@ -88,25 +99,25 @@ namespace WagsReader.Models
         {
             try
             {
-                if (_db.Find<User>(u => u.UserId == item.UserId) == null)
+                if (_db.Find<User>(u => u.ID == item.ID) == null)
                 {
                     _db.RunInTransaction(() =>
                     {
                         _db.InsertWithChildren(item, recursive: true);
                     });
 
-                    return await GetUserAsync(item.UserId, true);
+                    return await GetUserAsync(item.ID, true);
                 }
                 else
                 {
                     // user already exists, update
-                    var existingUser = await GetUserAsync(item.UserId, true);
+                    var existingUser = await GetUserAsync(item.ID, true);
                     _db.RunInTransaction(() =>
                     {
                         _db.Update(item);
                     });
 
-                    return await GetUserAsync(item.UserId, true);
+                    return await GetUserAsync(item.ID, true);
                 }
             }
             catch (SQLiteException ex)

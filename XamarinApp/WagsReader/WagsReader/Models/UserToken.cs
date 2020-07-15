@@ -8,27 +8,29 @@ namespace WagsReader.Models
     public class UserToken : BaseModel
     {
         [PrimaryKey, AutoIncrement]
-        public int UserTokenId { get; set; }
+        [Column("id")]
+        public int ID { get; set; }
 
         [OneToOne("UserId", "User", CascadeOperations = CascadeOperation.CascadeRead, ReadOnly = true)]
         public User User { get; set; }
 
         [ForeignKey(typeof(User))]
-        public string UserId { get; set; }
+        [Column("user_id")]
+        public int UserId { get; set; }
 
-        [JsonProperty("access_token")]
+        [Column("access_token")]
         public string AccessToken { get; set; }
 
-        [JsonProperty("token_type")]
+        [Column("token_type")]
         public string TokenType { get; set; }
 
-        [JsonProperty("expires_in")]
-        public int ExpiresIn { get; set; }
+        [Column("expires_in")]
+        public long ExpiresIn { get; set; }
         
-        [JsonProperty("refresh_token")]
+        [Column("refresh_token")]
         public string RefreshToken { get; set; }
 
-        [JsonProperty("scope")]
+        [Column("scope")]
         public string Scope { get; set; }
 
         public UserToken()

@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using WagsReader.Models;
+using WagsReader.Services;
+using Xamarin.Essentials;
 using Xamarin.Forms;
 
 namespace WagsReader.ViewModels
@@ -17,29 +19,6 @@ namespace WagsReader.ViewModels
             {
                 _users = value;
                 OnPropertyChanged(nameof(Users));
-                OnPropertyChanged(nameof(ShowAccountList));
-            }
-        }
-
-        public bool ShowAccountList
-        {
-            get
-            {
-                if (Users.Count > 1)
-                {
-                    return true;
-                }
-
-                return false;
-            }
-        }
-
-        private ICommand _linkRSSAccount;
-        public ICommand LinkRSSAccount
-        {
-            get
-            {
-                return _linkRSSAccount ?? (_linkRSSAccount = new Command(OnLinkRSSAccount));
             }
         }
 
@@ -51,23 +30,45 @@ namespace WagsReader.ViewModels
         public async Task LoadData()
         {
             await LoadUsers();
+
+            // fetch data if internet is available
+            if (Connectivity.NetworkAccess == NetworkAccess.Internet)
+            {
+                if (Users.Count > 0)
+                {
+                    foreach (var user in Users)
+                    {
+                        switch (user.Type)
+                        {
+                            case AccountType.Inoreader:
+                                await FetchInoreaderData(user);
+                                break;
+                        }
+                    }
+                }
+            }
         }
 
         private async Task LoadUsers()
         {
-            var users = await User.GetUsersAsync();
+            var users = await User.GetUsersAsync(recursive: true);
 
             foreach (var user in users)
             {
                 Users.Add(user);
             }
-
-            OnPropertyChanged(nameof(ShowAccountList));
         }
 
-        protected async void OnLinkRSSAccount()
+        private async Task FetchInoreaderData(User user)
         {
-            await Navigation.PushAsync(new Views.AddAccountPage());
+            IsLoading = true;
+            LoadingText = "Fetching feeds...";
+
+            var inoreaderService = new InoreaderService();
+            await inoreaderService.GetLatestFeedsForUser(user);
+
+            IsLoading = false;
+            LoadingText = "";
         }
     }
 }

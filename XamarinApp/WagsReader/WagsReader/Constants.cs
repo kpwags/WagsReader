@@ -19,6 +19,9 @@ namespace WagsReader
         public static string InoreaderApiUri = "https://www.inoreader.com/reader/api/0/";
         public static string InoreaderClientId = "999999537";
         public static string InoreaderScope = "read write";
+
+        // GENERAL
+        public static int MaxDownloadPerFeed = 100;
     }
 
     public enum AccountType

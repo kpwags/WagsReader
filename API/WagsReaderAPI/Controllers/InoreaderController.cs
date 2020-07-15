@@ -52,7 +52,6 @@ namespace WagsReaderAPI.Controllers
                 var content = ApiUtilities.GetRequestContentAsDictionary(InoreaderTokenRequest);
 
                 string contentSerialized = await content.ReadAsStringAsync();
-                Debug.WriteLine($"Request Content: {contentSerialized}");
 
                 var token = await requestProvider.PostAsync<UserToken>(
                     uri: Utilities.AppSettings.InoreaderTokenUri,

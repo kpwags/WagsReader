@@ -1,17 +1,15 @@
-﻿using IdentityModel.Client;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using WagsReader.Models;
 using WagsReader.Services.Interfaces;
 using WagsReaderLibrary;
+using WagsReaderLibrary.Inoreader.Models;
 using WagsReaderLibrary.Interfaces;
 using WagsReaderLibrary.Requests;
-using Xamarin.Essentials;
-using Xamarin.Forms;
 
 namespace WagsReader.Services
 {
@@ -31,7 +29,7 @@ namespace WagsReader.Services
             try
             {
                 Classes.AuthRequest authRequest = IdentityService.CreateAuthorizationRequest();
-                var authResponse = await WebAuthenticator.AuthenticateAsync(new Uri(authRequest.Url), new Uri(Constants.InoreaderRedirectUri));
+                var authResponse = await Xamarin.Essentials.WebAuthenticator.AuthenticateAsync(new Uri(authRequest.Url), new Uri(Constants.InoreaderRedirectUri));
 
                 string code = authResponse?.Properties["code"];
                 string state = authResponse?.Properties["state"];
@@ -59,14 +57,20 @@ namespace WagsReader.Services
                 var user = JsonConvert.DeserializeObject<User>(userJson);
 
                 user.AccountName = $"Inoreader ({user.Username})";
-                user.Token = new UserToken(response.Data);
+                user.Token = new Models.UserToken(response.Data);
 
                 // get folders
                 var folderJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/tag/list?types=1&counts=1", response.Data.AccessToken);
-                user.Folders = GetFoldersFromJson(folderJson);                
+                user.Folders = GetFoldersFromJson(folderJson);
 
                 await User.Save(user);
-                
+
+                // get feeds
+                var feedJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/subscription/list", response.Data.AccessToken);
+                await ProcessUserFeeds(feedJson, response.Data.AccessToken);
+
+                System.Diagnostics.Debug.WriteLine($"Done Processing User");
+
                 return user;
             }
             catch (Exception ex)
@@ -76,9 +80,22 @@ namespace WagsReader.Services
             }
         }
 
+        public async Task GetLatestFeedsForUser(User user)
+        {
+            // get folders
+            var folderJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/tag/list?types=1&counts=1", user.Token.AccessToken);
+            user.Folders = GetFoldersFromJson(folderJson);
+
+            await User.Save(user);
+
+            // get feeds
+            var feedJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/subscription/list", user.Token.AccessToken);
+            await ProcessUserFeeds(feedJson, user.Token.AccessToken);
+        }
+
         protected List<Folder> GetFoldersFromJson(string folderJson)
         {
-            var folderResponse = JsonConvert.DeserializeObject<WagsReaderLibrary.Inoreader.Models.FolderTagList>(folderJson);
+            var folderResponse = JsonConvert.DeserializeObject<FolderTagList>(folderJson);
 
             var folders = new List<Folder>();
 
@@ -88,6 +105,76 @@ namespace WagsReader.Services
             }
 
             return folders;
+        }
+
+        protected async Task ProcessUserFeeds(string feedJson, string accessToken)
+        {
+            var subscriptionResponse = JsonConvert.DeserializeObject<SubscriptionList>(feedJson);
+
+            foreach (var sub in subscriptionResponse.Subscriptions)
+            {
+                var feed = await Feed.GetFeedBySubscriptionIdAsync(sub.SubscriptionId);
+
+                if (feed == null)
+                {
+                    // brand new, save
+                    // TODO: Update data?
+                    feed = new Feed
+                    {
+                        SubscriptionId = sub.SubscriptionId,
+                        Title = sub.Title,
+                        SortId = sub.SortId,
+                        FirstItemSec = sub.FirstItemSec,
+                        Url = sub.Url,
+                        HtmlUrl = sub.HtmlUrl,
+                        IconUrl = sub.IconUrl
+                    };
+
+                    feed = await Feed.SaveAsync(feed);
+                }
+
+                foreach (SubscriptionCategory subscriptionCategory in sub.Categories)
+                {
+                    var folder = await Folder.GetFolderByExternalIdAsync(subscriptionCategory.Id);
+
+                    var feedFolder = new FeedFolder
+                    {
+                        FeedId = feed.ID,
+                        FolderId = folder.ID
+                    };
+
+                    FeedFolder.Save(feedFolder);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Processing Feed: {feed.Title}");
+                string streamId = WebUtility.UrlEncode(feed.SubscriptionId);
+
+                string apiEndpoint = $"https://www.inoreader.com/reader/api/0/stream/contents/{streamId}?n={Constants.MaxDownloadPerFeed}";
+
+                if (feed.LastPullUSec > 0)
+                {
+                    apiEndpoint = $"{apiEndpoint}&ot={feed.LastPullUSec}";
+                }
+
+                var feedItemJson = await RequestProvider.GetAsync(apiEndpoint, accessToken);
+                await ProcessFeedItems(feed, feedItemJson);
+
+                await Feed.UpdateLastPullTime(feed.ID);
+            }
+        }
+
+        protected async Task ProcessFeedItems(Feed feed, string feedItemJson)
+        {
+            var articleResponse = JsonConvert.DeserializeObject<StreamList>(feedItemJson);
+
+            foreach (var item in articleResponse.Items.Where(i => i.Origin != null))
+            {
+                var feedItem = new FeedItem(item);
+
+                feedItem.FeedId = feed.ID;
+                feedItem.Feed = feed;
+                await FeedItem.SaveAsync(feedItem);
+            }
         }
     }
 }

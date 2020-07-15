@@ -103,8 +103,14 @@ namespace WagsReader.ViewModels
         {
             try
             {
+                IsLoading = true;
+                LoadingText = "Authenticating with Inoreader...";
+
                 RSSService = new InoreaderService();
                 User = await RSSService.Login();
+
+                IsLoading = false;
+                LoadingText = "";
 
                 if (User != null)
                 {
@@ -115,10 +121,14 @@ namespace WagsReader.ViewModels
             catch (AuthException ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Auth Error: {ex.Message}");
+                IsLoading = false;
+                LoadingText = "";
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error Handling OAuth: {ex.Message}");
+                IsLoading = false;
+                LoadingText = "";
             }
         }
 
@@ -126,17 +136,25 @@ namespace WagsReader.ViewModels
         {
             try
             {
-                var user = await User.GetUserAsync(User.UserId);
+                IsLoading = true;
+                LoadingText = "Saving Account Info...";
+
+                var user = await User.GetUserAsync(User.ID);
                 user.AccountName = AccountName;
 
                 User = await User.Save(user);
 
                 AccountName = "";
                 CurrentStep = 1;
+
+                IsLoading = false;
+                LoadingText = "";
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error saving user account name: {ex.Message}");
+                IsLoading = false;
+                LoadingText = "";
             }
         }
     }

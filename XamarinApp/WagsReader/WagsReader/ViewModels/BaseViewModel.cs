@@ -11,20 +11,25 @@ namespace WagsReader.ViewModels
 
         public INavigation Navigation;
 
-        public Func<object, bool> AllowNavigation => ShouldAllowNavigation;
-
-        private bool _canNavigate;
-        public bool CanNavigate
+        private bool _isLoading;
+        public bool IsLoading
         {
-            get
-            {
-                return _canNavigate;
-            }
-
+            get { return _isLoading; }
             set
             {
-                _canNavigate = value;
-                OnPropertyChanged(nameof(CanNavigate));
+                _isLoading = value;
+                OnPropertyChanged(nameof(IsLoading));
+            }
+        }
+
+        private string _loadingText;
+        public string LoadingText
+        {
+            get { return _loadingText; }
+            set
+            {
+                _loadingText = value;
+                OnPropertyChanged(nameof(LoadingText));
             }
         }
 
@@ -37,13 +42,6 @@ namespace WagsReader.ViewModels
         {
             PropertyChanged?.Invoke(this,
             new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool ShouldAllowNavigation(object arg)
-        {
-            return CanNavigate;
-        }
-
-        
+        }        
     }
 }
