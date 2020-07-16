@@ -53,21 +53,19 @@ namespace WagsReader.Services
                     throw new Exception(response.ErrorMessage);
                 }
 
-                var userJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/user-info", response.Data.AccessToken);
+                var userJson = await RequestProvider.GetAsync($"{Constants.InoreaderApiUri}/user-info", response.Data.AccessToken);
                 var user = JsonConvert.DeserializeObject<User>(userJson);
 
                 user.AccountName = $"Inoreader ({user.Username})";
                 user.Token = new Models.UserToken(response.Data);
 
                 // get folders
-                var folderJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/tag/list?types=1&counts=1", response.Data.AccessToken);
-                user.Folders = GetFoldersFromJson(folderJson);
+                user.Folders = await GetFoldersFromJson(response.Data.AccessToken);
 
                 await User.Save(user);
 
                 // get feeds
-                var feedJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/subscription/list", response.Data.AccessToken);
-                await ProcessUserFeeds(feedJson, response.Data.AccessToken);
+                await ProcessUserFeeds(response.Data.AccessToken);
 
                 System.Diagnostics.Debug.WriteLine($"Done Processing User");
 
@@ -82,19 +80,17 @@ namespace WagsReader.Services
 
         public async Task GetLatestFeedsForUser(User user)
         {
-            // get folders
-            var folderJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/tag/list?types=1&counts=1", user.Token.AccessToken);
-            user.Folders = GetFoldersFromJson(folderJson);
-
+            // update user folders
+            user.Folders = await GetFoldersFromJson(user.Token.AccessToken);
             await User.Save(user);
 
-            // get feeds
-            var feedJson = await RequestProvider.GetAsync("https://www.inoreader.com/reader/api/0/subscription/list", user.Token.AccessToken);
-            await ProcessUserFeeds(feedJson, user.Token.AccessToken);
+            // get feeds            
+            await ProcessUserFeeds(user.Token.AccessToken);
         }
 
-        protected List<Folder> GetFoldersFromJson(string folderJson)
+        protected async Task<List<Folder>> GetFoldersFromJson(string accessToken)
         {
+            var folderJson = await RequestProvider.GetAsync($"{Constants.InoreaderApiUri}/tag/list?types=1&counts=1", accessToken);
             var folderResponse = JsonConvert.DeserializeObject<FolderTagList>(folderJson);
 
             var folders = new List<Folder>();
@@ -107,8 +103,10 @@ namespace WagsReader.Services
             return folders;
         }
 
-        protected async Task ProcessUserFeeds(string feedJson, string accessToken)
+        protected async Task ProcessUserFeeds(string accessToken)
         {
+            var feedJson = await RequestProvider.GetAsync($"{Constants.InoreaderApiUri}/subscription/list", accessToken);
+
             var subscriptionResponse = JsonConvert.DeserializeObject<SubscriptionList>(feedJson);
 
             foreach (var sub in subscriptionResponse.Subscriptions)
@@ -149,7 +147,7 @@ namespace WagsReader.Services
                 System.Diagnostics.Debug.WriteLine($"Processing Feed: {feed.Title}");
                 string streamId = WebUtility.UrlEncode(feed.SubscriptionId);
 
-                string apiEndpoint = $"https://www.inoreader.com/reader/api/0/stream/contents/{streamId}?n={Constants.MaxDownloadPerFeed}";
+                string apiEndpoint = $"{Constants.InoreaderApiUri}/stream/contents/{streamId}?n={Constants.MaxDownloadPerFeed}";
 
                 if (feed.LastPullUSec > 0)
                 {

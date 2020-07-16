@@ -100,7 +100,7 @@ namespace WagsReader.Models
             });
         }
 
-        public static async Task<FeedItem> SaveAsync(FeedItem feedItem)
+        public static async Task<FeedItem> SaveAsync(FeedItem feedItem, bool refreshAfterSave = false)
         {
             try
             {
@@ -111,7 +111,12 @@ namespace WagsReader.Models
                         _db.InsertWithChildren(feedItem, recursive: true);
                     });
 
-                    return await GetFeedItemByIdAsync(feedItem.FeedId, true);
+                    if (refreshAfterSave)
+                    {
+                        return await GetFeedItemByIdAsync(feedItem.FeedId, true);
+                    }
+
+                    return feedItem;
                 }
                 else
                 {
@@ -133,7 +138,12 @@ namespace WagsReader.Models
                         _db.Update(existingFeedItem);
                     });
 
-                    return await GetFeedItemByIdAsync(feedItem.FeedId, true);
+                    if (refreshAfterSave)
+                    {
+                        return await GetFeedItemByIdAsync(feedItem.FeedId, true);
+                    }
+
+                    return existingFeedItem;
                 }
             }
             catch (SQLiteException ex)
